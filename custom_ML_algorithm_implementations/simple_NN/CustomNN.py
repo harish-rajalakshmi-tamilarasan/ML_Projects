@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[13]:
+# In[1]:
 
 
 import numpy as np
@@ -35,7 +35,7 @@ class NeuralNetwork():
         # self.bias_ip = np.zeros((hidden_units)) 
         # self.weights_op = np.round(np.random.rand(hidden_units, output_size),2)  
         # self.bias_op = np.zeros((output_size)) 
-        self.weights_ip = np.random.randn(input_size, hidden_units) * np.sqrt(2 / (input_size + hidden_units))
+        self.weights_ip = np.random.randn(input_size, hidden_units) * np.sqrt(2 / (input_size))
         self.bias_ip = np.zeros((1, hidden_units))  # Hidden bias (1, hidden_units)
         self.weights_op = np.random.randn(hidden_units, output_size) * np.sqrt(2 / (hidden_units + output_size))
         self.bias_op = np.zeros((1, output_size))
@@ -89,28 +89,47 @@ class NeuralNetwork():
 
 
 
-# In[14]:
+# In[5]:
 
 
-np.random.seed(42)
-
-num_samples = 200
-heights = np.random.normal(loc=170, scale=10, size=num_samples)  # Mean height ~ 170 cm
-weights = np.random.normal(loc=70, scale=15, size=num_samples)    # Mean weight ~ 70 kg
-
-bmi = weights / (heights / 100) ** 2  
-y = (bmi < 24.9).astype(int)  
-
-X = np.column_stack((heights, weights))
-y = y.reshape(-1,1)
+def custom_train_test_split(X,y,ratio):
+    length = X.shape[0]
+    indices = np.arange(length)
+    np.random.shuffle(indices)
+    split_size = int(length - length*ratio)
+    train_indices = indices[:split_size]
+    test_indices = indices[split_size:]
+    return X[train_indices], X[test_indices],y[train_indices], y[test_indices]
 
 
+
+# In[6]:
+
+
+def train_test_data():
+    np.random.seed(42)
+    num_samples = 400
+    heights = np.random.normal(loc=170, scale=10, size=num_samples)  # Mean height ~ 170 cm
+    weights = np.random.normal(loc=70, scale=15, size=num_samples)    # Mean weight ~ 70 kg
+    bmi = weights / (heights / 100) ** 2  
+    y = (bmi < 24.9).astype(int)  
+    X = np.column_stack((heights, weights))
+    y = y.reshape(-1,1)
+    X_train, X_test, y_train, y_test = custom_train_test_split(X, y,0.25)
+    return X_train, X_test, y_train, y_test 
+
+
+X_train, X_test, y_train, y_test = train_test_data()
 scaler = StandardScaler()
-X = scaler.fit_transform(X)
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
 
-model = NeuralNetwork(X.shape[1],16,1)
-def train():
+# In[7]:
+
+
+model = NeuralNetwork(X_train.shape[1],16,1)
+def train(X,y):
     epochs = 100
     for i in range(epochs):
         model(X)
@@ -118,23 +137,46 @@ def train():
         model.backward(y,0.1)
         print(loss)
 
-def test():
+def test(X,y):
     y_preds = model(X)
     output = np.where(y_preds >= 0.5, 1, 0)
     accuracy = np.mean(output==y)
     return accuracy
 
 
-# In[12]:
+# In[8]:
 
 
-train()
+train(X_train,y_train)
+
+
+# In[9]:
+
+
+test(X_train,y_train)
 
 
 # In[10]:
 
 
-test()
+test(X_test,y_test)
+
+
+# In[ ]:
+
+
+# num_samples = 100
+# test_heights = np.random.normal(loc=170, scale=10, size=num_samples)  # Mean height ~ 170 cm
+# test_weights = np.random.normal(loc=70, scale=15, size=num_samples) 
+# bmi = weights / (heights / 100) ** 2  
+# y_test = (bmi < 24.9).astype(int)  
+
+# X_test = np.column_stack((heights, weights))
+# y = y.reshape(-1,1)
+
+
+# scaler = StandardScaler()
+# X = scaler.fit_transform(X)
 
 
 # In[ ]:
